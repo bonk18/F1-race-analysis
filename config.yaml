@@ -1,0 +1,29 @@
+# Cleaning and analysis configuration
+cleaning:
+  # MAD-based outlier threshold (higher = more permissive)
+  mad_threshold: 4.0
+  # Minimum lap number to include (excludes formation laps)
+  min_lap_number: 2
+  # Maximum allowable lap duration as multiple of median
+  max_duration_ratio: 2.0
+  # Minimum lap duration in seconds (anything below is invalid)
+  min_lap_duration: 30.0
+
+ingestion:
+  base_url: "https://api.openf1.org/v1"
+  timeout: 30
+  max_retries: 3
+  retry_delay: 1.0
+  cache_dir: "data/raw"
+
+database:
+  # Default to SQLite; override via DATABASE_URL env var
+  url: "sqlite:///data/f1_strategy.db"
+
+analysis:
+  # Number of laps before/after pit stop for pace comparison
+  pit_stop_window: 3
+  # Consistency threshold: % of median pace
+  consistency_pct_threshold: 0.005
+  # Minimum clean laps required for valid pace analysis
+  min_clean_laps: 5
