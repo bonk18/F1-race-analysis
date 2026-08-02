@@ -6,16 +6,14 @@
 
 An end-to-end data engineering, analytics, and machine learning platform for Formula 1 race strategy. 
 
-Built by **Shreyas** ([@bonk18](https://github.com/bonk18)).
-
-## 🌟 Overview
+## Overview
 
 This platform ingests raw telemetry and race-control data from the OpenF1 API, cleans and normalizes it using a bespoke Median Absolute Deviation (MAD) engine, and models tyre degradation and pit-stop outcomes using Gradient Boosting (LightGBM).
 
 The ultimate goal of the platform is to answer the fundamental F1 strategy question:
 > **"What is the expected net race time if we pit NOW versus pitting N laps later?"**
 
-## ✨ Features
+##  Features
 
 - **Automated Data Ingestion**: Python-based client that syncs directly with OpenF1, handling API rate limits, caching, and database UPSERT operations.
 - **Robust Data Cleaning**: A MAD-based lap classification engine that mathematically isolates pure "race pace" from VSC periods, pit-laps, and statistical outliers.
@@ -23,7 +21,7 @@ The ultimate goal of the platform is to answer the fundamental F1 strategy quest
 - **Counterfactual Strategy Explorer**: Simulates pit-stop outcomes in real-time, accounting for average pit lane time loss, out-lap pace gains (the undercut), and multi-compound tyre wear.
 - **Premium Streamlit Dashboard**: A beautiful, dark-mode interactive web application featuring Plotly data visualizations.
 
-## 📸 Screenshots
+##  Screenshots
 
 | Race Overview | Strategy Explorer |
 |:---:|:---:|
@@ -45,7 +43,7 @@ The ultimate goal of the platform is to answer the fundamental F1 strategy quest
 | ![Cross Race](screenshots/cross_race_1.png) | ![Driver Pace 2](screenshots/driver_pace_2.png) |
 | Comparing pace and pit stops across the season. | LOWESS smoothed pace tracking over a stint. |
 
-## 🚀 Quick Start (Local Environment)
+##  Quick Start (Local Environment)
 
 1. **Clone the repository:**
    ```bash
@@ -74,7 +72,7 @@ The ultimate goal of the platform is to answer the fundamental F1 strategy quest
    streamlit run dashboard/App.py
    ```
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 F1-race-analysis/
@@ -91,7 +89,7 @@ F1-race-analysis/
 └── requirements.txt
 ```
 
-## 🧪 Testing
+##  Testing
 
 The platform is heavily tested using `pytest`. The test suite uses offline fixture data to ensure reliability independent of the OpenF1 API.
 
@@ -99,10 +97,6 @@ The platform is heavily tested using `pytest`. The test suite uses offline fixtu
 pytest tests/
 ```
 
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/bonk18/F1-race-analysis/issues).
-
-## 📄 License
+##  License
 
 This project is [MIT](https://opensource.org/licenses/MIT) licensed.
