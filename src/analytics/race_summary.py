@@ -100,7 +100,8 @@ class RaceAnalyzer:
                     {c.key: getattr(row, c.key) for c in row.__table__.columns}
                     for row in query.all()
                 ]
-                df = pd.DataFrame(records) if records else pd.DataFrame()
+                columns = [column.key for column in model.__table__.columns]
+                df = pd.DataFrame(records, columns=columns)
                 if name == "drivers" and not df.empty and "full_name" in df.columns:
                     df["full_name"] = df["full_name"].str.title()
                 data[name] = df

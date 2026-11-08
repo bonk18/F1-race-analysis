@@ -89,8 +89,7 @@ class StrategyExplorer:
                 lap_times.append(float(pred))
             except Exception as e:
                 logger.error("Simulation failed at lap %d: %s", lap, e)
-                # Fallback to a generic lap time if features are missing
-                lap_times.append(90.0 + (current_age * 0.1))
+                raise RuntimeError(f"Simulation failed at lap {lap}: {e}") from e
                 
             current_age += 1
             

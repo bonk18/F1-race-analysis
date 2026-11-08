@@ -19,29 +19,7 @@ The ultimate goal of the platform is to answer the fundamental F1 strategy quest
 - **Robust Data Cleaning**: A MAD-based lap classification engine that mathematically isolates pure "race pace" from VSC periods, pit-laps, and statistical outliers.
 - **Machine Learning (LightGBM)**: Predicts tyre degradation (lap time decay) with a Mean Absolute Error of **0.275s**, reducing baseline prediction error by 72% by isolating track evolution and fuel burn.
 - **Counterfactual Strategy Explorer**: Simulates pit-stop outcomes in real-time, accounting for average pit lane time loss, out-lap pace gains (the undercut), and multi-compound tyre wear.
-- **Premium Streamlit Dashboard**: A beautiful, dark-mode interactive web application featuring Plotly data visualizations.
-
-##  Screenshots
-
-| Race Overview | Strategy Explorer |
-|:---:|:---:|
-| ![Race Overview](screenshots/overview_1.png) | ![Strategy Explorer](screenshots/strat_1.png) |
-| High-level KPIs, podium finishes, and automated text takeaways. | Simulating lap times under different pit-stop scenarios. |
-
-| Tyre Degradation | Driver Pace |
-|:---:|:---:|
-| ![Tyre Degradation](screenshots/tyre_degradation_1.png) | ![Driver Pace](screenshots/driver_pace_1.png) |
-| Compound-specific degradation rates mapped to Pirelli colors. | Box-plots measuring driver lap time consistency and variance. |
-
-| Pit Strategy Analysis | Data Quality & Cleaning |
-|:---:|:---:|
-| ![Pit Strategy](screenshots/pit_1.png) | ![Data Clean](screenshots/data_clean_1.png) |
-| Analysing pace delta after pit stops. | Transparency into the MAD cleaning engine logic. |
-
-| Cross Race Analysis | Driver Pace Evolution |
-|:---:|:---:|
-| ![Cross Race](screenshots/cross_race_1.png) | ![Driver Pace 2](screenshots/driver_pace_2.png) |
-| Comparing pace and pit stops across the season. | LOWESS smoothed pace tracking over a stint. |
+- **React dashboard**: Explore race overview, driver pace, tyre degradation, pit strategy, simulation, data quality and cross-race metrics using the Python analytics.
 
 ##  Quick Start (Local Environment)
 
@@ -59,7 +37,7 @@ The ultimate goal of the platform is to answer the fundamental F1 strategy quest
 
 3. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
 
 4. **Sync Data (e.g., 2024 Bahrain GP):**
@@ -67,16 +45,27 @@ The ultimate goal of the platform is to answer the fundamental F1 strategy quest
    python -m src.ingestion.sync --year 2024 --meeting-key 1229
    ```
 
-5. **Launch the Dashboard:**
+5. **Start the local Python API** (from the repository root):
    ```bash
-   streamlit run dashboard/App.py
+   python dashboard_api.py
    ```
+
+6. **Start the Node dashboard** in another terminal (Node 20.19+ or 22.12+):
+   ```bash
+   npm --prefix frontend install
+   npm --prefix frontend run dev
+   ```
+   Open the Vite URL printed in the terminal (normally http://localhost:5173). The development server proxies `/api` to `127.0.0.1:8000`. The API is intended for local use only. The database is `data/f1_strategy.db`; sync data first if it is empty.
+
+   Build and type-check with `npm --prefix frontend run build`. The old `dashboard/` Streamlit app is retained as a legacy reference and is not the primary UI. The strategy simulation trains on the selected session and uses estimated input features and a fixed 24-second pit loss; it is not a race prediction guarantee.
 
 ##  Architecture
 
 ```
 F1-race-analysis/
-├── dashboard/                 # Streamlit UI & Pages
+├── frontend/                  # React/Vite dashboard
+├── dashboard_api.py           # Local Python analytics API
+├── dashboard/                 # Legacy Streamlit UI
 ├── data/                      # Local SQLite Database (f1_strategy.db)
 ├── sql/                       # Core analytical views
 ├── src/
@@ -86,7 +75,7 @@ F1-race-analysis/
 │   ├── features/              # ML Feature Engineering Pipeline
 │   └── models/                # LightGBM Tyre & Pit Outcome Models
 ├── tests/                     # Pytest suite
-└── requirements.txt
+└── pyproject.toml
 ```
 
 ##  Testing

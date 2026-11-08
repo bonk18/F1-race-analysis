@@ -1,3 +1,6 @@
+# Node
+node_modules/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -13,10 +16,14 @@ venv/
 
 # Data files (raw data cached locally, not committed)
 data/raw/
+data/*.db-*
 data/interim/
 data/processed/
 *.db
 *.sqlite
+
+# Pi local project state
+.pi/
 
 # IDE
 .idea/

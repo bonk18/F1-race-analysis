@@ -34,6 +34,8 @@ class IngestionConfig:
     timeout: int = 30
     max_retries: int = 3
     retry_delay: float = 1.0
+    requests_per_second: int = 3
+    requests_per_minute: int = 30
     cache_dir: str = "data/raw"
 
     @property

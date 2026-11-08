@@ -12,7 +12,9 @@ import hashlib
 import json
 import logging
 import time
+from collections import deque
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import httpx
@@ -61,6 +63,14 @@ class OpenF1Client:
         self.cache_dir = Path(cache_dir or cfg.cache_path)
         self.timeout = timeout or cfg.timeout
         self.max_retries = max_retries or cfg.max_retries
+        self.requests_per_second = cfg.requests_per_second
+        self.requests_per_minute = cfg.requests_per_minute
+
+        # A rolling-window limiter enforces both published OpenF1 limits.
+        self._request_times: deque[float] = deque()
+        self._rate_lock = Lock()
+        self._monotonic = time.monotonic
+        self._sleep = time.sleep
 
         # Ensure cache directory exists
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -130,6 +140,31 @@ class OpenF1Client:
 
     # ── Core request method ────────────────────────────────────────
 
+    def _wait_for_rate_limit(self) -> None:
+        """Block until a request is allowed by both rolling windows."""
+        with self._rate_lock:
+            while True:
+                now = self._monotonic()
+                minute_cutoff = now - 60.0
+                while self._request_times and self._request_times[0] <= minute_cutoff:
+                    self._request_times.popleft()
+
+                waits: list[float] = []
+                if len(self._request_times) >= self.requests_per_minute:
+                    waits.append(self._request_times[0] + 60.0 - now)
+
+                recent = [stamp for stamp in self._request_times if stamp > now - 1.0]
+                if len(recent) >= self.requests_per_second:
+                    waits.append(recent[-self.requests_per_second] + 1.0 - now)
+
+                wait_for = max(waits, default=0.0)
+                if wait_for <= 0:
+                    self._request_times.append(now)
+                    return
+
+                logger.info("OpenF1 rate limit: waiting %.2fs", wait_for)
+                self._sleep(wait_for)
+
     @retry(
         retry=retry_if_exception_type((httpx.TransportError, OpenF1RateLimitError)),
         stop=stop_after_attempt(3),
@@ -151,11 +186,21 @@ class OpenF1Client:
             OpenF1RateLimitError: On 429 (triggers retry).
         """
         url = f"/{endpoint}"
+        self._wait_for_rate_limit()
         logger.info("GET %s/%s params=%s", self.base_url, endpoint, params)
 
         response = self._client.get(url, params=params)
 
         if response.status_code == 429:
+            retry_after = response.headers.get("Retry-After")
+            if retry_after:
+                try:
+                    delay = max(0.0, float(retry_after))
+                except ValueError:
+                    delay = 0.0
+                if delay:
+                    logger.warning("OpenF1 returned 429; waiting %.2fs", delay)
+                    self._sleep(delay)
             raise OpenF1RateLimitError("Rate limited by OpenF1 API")
 
         if response.status_code == 404:

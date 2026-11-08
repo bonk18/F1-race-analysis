@@ -164,3 +164,40 @@ class TestOpenF1ClientCache:
 
             assert result == data
             client.close()
+
+    def test_rate_limiter_enforces_second_and_minute_windows(self):
+        """The client should wait for whichever rolling limit is stricter."""
+        from src.ingestion.client import OpenF1Client
+
+        class FakeClock:
+            def __init__(self, now: float) -> None:
+                self.now = now
+                self.sleeps: list[float] = []
+
+            def monotonic(self) -> float:
+                return self.now
+
+            def sleep(self, seconds: float) -> None:
+                self.sleeps.append(seconds)
+                self.now += seconds
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            client = OpenF1Client(cache_dir=tmpdir)
+            clock = FakeClock(0.2)
+            client._monotonic = clock.monotonic
+            client._sleep = clock.sleep
+            client._request_times.extend([0.0, 0.1, 0.2])
+
+            client._wait_for_rate_limit()
+
+            assert clock.sleeps == [pytest.approx(0.8)]
+
+            clock.now = 29.0
+            clock.sleeps.clear()
+            client._request_times.clear()
+            client._request_times.extend(float(second) for second in range(30))
+
+            client._wait_for_rate_limit()
+
+            assert clock.sleeps == [pytest.approx(31.0)]
+            client.close()
